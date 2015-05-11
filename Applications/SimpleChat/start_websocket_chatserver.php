@@ -103,7 +103,7 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
             $type='MSG';
             $messagetype=0;
             $tcontent=isset($scontent['content'])?$scontent['content']:'';
-            var_dump($_SESSION);
+            //var_dump($_SESSION);
             if(isset($_SESSION['user_'.$userid])){
                 $userinfo=$_SESSION['user_'.$userid];
             }
@@ -167,7 +167,7 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
         'headpic' => $headpic,
         'name' => $name
     );
-    var_dump($data);
+    //var_dump($data);
     $connectionids=$db1->select('connectionid')->from('tbl_connection')
         ->where(' book_id= :bookid and delflag=0')->bindValues(array('bookid'=>$bookid))->column();
     broad_cast(json_encode($data),$connectionids);
