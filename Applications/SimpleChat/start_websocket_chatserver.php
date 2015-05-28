@@ -82,7 +82,7 @@ $ws_server->onConnect = function($connection)
 
         $connectionids=$db1->select('connectionid')->from('tbl_connection')
             ->where(' book_id= :bookid and delflag=0')->bindValues(array('bookid'=>$bookid))->column();
-        broad_cast(json_encode($data),$connectionids);
+        chat_broad_cast(json_encode($data),$connectionids);
     };
 };
 
@@ -99,7 +99,7 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
     if($scontent&&isset($scontent['bookid'])&&$userid&&$scontent['code']){
 
 
-        if(verify_code($userid,$scontent['code'])){
+        if(chat_verify_code($userid,$scontent['code'])){
             $type='MSG';
             $messagetype=0;
             $tcontent=isset($scontent['content'])?$scontent['content']:'';
@@ -170,7 +170,7 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
     //var_dump($data);
     $connectionids=$db1->select('connectionid')->from('tbl_connection')
         ->where(' book_id= :bookid and delflag=0')->bindValues(array('bookid'=>$bookid))->column();
-    broad_cast(json_encode($data),$connectionids);
+    chat_broad_cast(json_encode($data),$connectionids);
 };
 
 // @see http://doc3.workerman.net/worker-development/connection-on-close.html
@@ -221,7 +221,7 @@ $ws_server->onClose = function($connection)
                 'name' => $name
         );
 
-    broad_cast(json_encode($data),$connectionids);
+    chat_broad_cast(json_encode($data),$connectionids);
 };
 
 /**
@@ -229,7 +229,7 @@ $ws_server->onClose = function($connection)
  * @param string $msg
  * @return void
  */
-function broad_cast($msg,$connectionids=array())
+function chat_broad_cast($msg,$connectionids=array())
 {
     global $ws_server;
     //@see http://doc3.workerman.net/worker-development/connections.html
@@ -243,7 +243,7 @@ function broad_cast($msg,$connectionids=array())
     }
 }
 
-function verify_code($id,$code){
+function chat_verify_code($id,$code){
     if(substr(md5('@#'.$id.'*&^'),3,25)==$code){
         return true;
     }
