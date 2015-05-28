@@ -6,9 +6,9 @@ use \GatewayWorker\Lib\Db;
 // autoload
 require_once __DIR__ . '/../../Workerman/Autoloader.php';
 Autoloader::setRootPath(__DIR__);
-
+$config=\Config\Config::$config1;
 // create Websocket worker
-$ws_server = new Worker('Websocket://0.0.0.0:3636');
+$ws_server = new Worker('Websocket://'.$config['chatserver']);
 
 $ws_server->name = 'SimpleChatWebSocket';
 
