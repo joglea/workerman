@@ -151,7 +151,7 @@ class Worker
      * 所有的客户端连接
      * @var array
      */
-    public $connections = array();
+    public $allconnections = array();
     
     /**
      * 应用层协议，由初始化worker时指定

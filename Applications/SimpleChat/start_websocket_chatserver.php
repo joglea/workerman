@@ -236,7 +236,7 @@ function chat_broad_cast($msg,$connectionids=array())
 {
     global $ws_server;
     //@see http://doc3.workerman.net/worker-development/connections.html
-    foreach($ws_server->connections as $connection)
+    foreach($ws_server->allconnections as $connection)
     {
         if($connectionids&&in_array($connection->id,$connectionids)){
             // @see http://doc3.workerman.net/worker-development/send.html
