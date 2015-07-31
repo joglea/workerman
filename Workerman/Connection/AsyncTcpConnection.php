@@ -1,15 +1,24 @@
 <?php
+/**
+ * This file is part of workerman.
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the MIT-LICENSE.txt
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @author walkor<walkor@workerman.net>
+ * @copyright walkor<walkor@workerman.net>
+ * @link http://www.workerman.net/
+ * @license http://www.opensource.org/licenses/mit-license.php MIT License
+ */
 namespace Workerman\Connection;
 
-use Workerman\Events\Libevent;
-use Workerman\Events\Select;
 use Workerman\Events\EventInterface;
 use Workerman\Worker;
 use \Exception;
 
 /**
  * 异步tcp连接类 
- * @author walkor<walkor@workerman.net>
  */
 class AsyncTcpConnection extends TcpConnection
 {
@@ -97,11 +106,11 @@ class AsyncTcpConnection extends TcpConnection
      */
     public function checkConnection($socket)
     {
-        // 删除连接可写监听
-        Worker::$globalEvent->del($this->_socket, EventInterface::EV_WRITE);
         // 需要判断两次连接是否已经断开
-        if(!feof($this->_socket) && !feof($this->_socket))
+        if(!feof($this->_socket) && !feof($this->_socket) && is_resource($this->_socket))
         {
+            // 删除连接可写监听
+            Worker::$globalEvent->del($this->_socket, EventInterface::EV_WRITE);
             // 设置非阻塞
             stream_set_blocking($this->_socket, 0);
             // 监听可读事件
@@ -129,11 +138,12 @@ class AsyncTcpConnection extends TcpConnection
         }
         else
         {
-            $this->_status = self::STATUS_CLOSED;
-            // 关闭socket
-            @fclose($this->_socket);
             // 连接未建立成功
             $this->emitError(WORKERMAN_CONNECT_FAIL, 'connect fail');
+            // 触发onClsoe
+            $this->destroy();
+            // 清理onConnect回调
+            $this->onConnect = null;
         }
     }
 }

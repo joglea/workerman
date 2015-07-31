@@ -1,6 +1,21 @@
 <?php
+/**
+ * This file is part of workerman.
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the MIT-LICENSE.txt
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @author walkor<walkor@workerman.net>
+ * @copyright walkor<walkor@workerman.net>
+ * @link http://www.workerman.net/
+ * @license http://www.opensource.org/licenses/mit-license.php MIT License
+ */
 namespace Workerman\Events;
 
+/**
+ * select eventloop
+ */
 class Select implements EventInterface
 {
     /**
@@ -177,7 +192,7 @@ class Select implements EventInterface
                 // 任务数据[func, args, flag, timer_interval]
                 $task_data = $this->_task[$timer_id];
                 // 如果是持续的定时任务，再把任务加到定时队列
-                if($task_data[2] == self::EV_TIMER)
+                if($task_data[2] === self::EV_TIMER)
                 {
                     $next_run_time = $time_now+$task_data[3];
                     $this->_scheduler->insert($timer_id, -$next_run_time);
@@ -231,6 +246,12 @@ class Select implements EventInterface
             // 等待可读或者可写事件
             @stream_select($read, $write, $e, 0, $this->_selectTimeout);
             
+            // 尝试执行定时任务
+            if(!$this->_scheduler->isEmpty())
+            {
+                $this->tick();
+            }
+            
             // 这些描述符可读，执行对应描述符的读回调函数
             if($read)
             {
@@ -255,12 +276,6 @@ class Select implements EventInterface
                         call_user_func_array($this->_allEvents[$fd_key][self::EV_WRITE][0], array($this->_allEvents[$fd_key][self::EV_WRITE][1]));
                     }
                 }
-            }
-            
-            // 尝试执行定时任务
-            if(!$this->_scheduler->isEmpty())
-            {
-                $this->tick();
             }
         }
     }
