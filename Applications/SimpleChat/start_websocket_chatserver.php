@@ -25,7 +25,7 @@ $ws_server->onConnect = function($connection)
         //var_dump($_GET,$_SERVER);
         $userid=isset($_GET['chatid'])?$_GET['chatid']:0;
 
-        $bookid=isset($_GET['bookid'])?$_GET['bookid']:0;
+        $roomid=isset($_GET['roomid'])?$_GET['roomid']:0;
 
 
         $db1=Db::instance('db1');
@@ -41,14 +41,14 @@ $ws_server->onConnect = function($connection)
         }
         if($userinfo){
             $id=$db1->select('id')->from('tbl_connection')
-                ->where('user_id= :userid and book_id= :bookid and delflag=0')->bindValues(array('userid'=>$userid,'bookid'=>$bookid))->single();
+                ->where('user_id= :userid and room_id= :roomid and delflag=0')->bindValues(array('userid'=>$userid,'roomid'=>$roomid))->single();
 
             if($id){
                 $db1->update('tbl_connection')->cols(array('connectionid'=>$connection->id,'updatetime'=>time()))->where("id=$id and delflag=0")->query();
             }
             else{
                 $db1->insert('tbl_connection')->cols(array('connectionid'=>$connection->id,
-                                                           'book_id'=>$bookid,
+                                                           'room_id'=>$roomid,
                                                            'user_id'=>$userid,
                                                            'createtime'=>time(),
                                                            'updatetime'=>time(),
@@ -81,7 +81,7 @@ $ws_server->onConnect = function($connection)
         );
 
         $connectionids=$db1->select('connectionid')->from('tbl_connection')
-            ->where(' book_id= :bookid and delflag=0')->bindValues(array('bookid'=>$bookid))->column();
+            ->where(' room_id= :roomid and delflag=0')->bindValues(array('roomid'=>$roomid))->column();
         chat_broad_cast(json_encode($data),$connectionids);
     };
 };
@@ -91,12 +91,12 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
 {
     $scontent=json_decode($content,true);
     $userid=$scontent['chatid'];
-    $bookid=$scontent['bookid'];
+    $roomid=$scontent['roomid'];
     $time = date('Y-m-d H:i:s');
     $headpic='/Public/Image/avatar.jpg';
     $name='';
     $db1=Db::instance('db1');
-    if($scontent&&isset($scontent['bookid'])&&$userid&&$scontent['code']){
+    if($scontent&&isset($scontent['roomid'])&&$userid&&$scontent['code']){
 
 
         if(chat_verify_code($userid,$scontent['code'])){
@@ -117,8 +117,8 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
                 $headpic=$userinfo['photo'];
                 $name=$userinfo['nickname']!=''?$userinfo['nickname']:$userinfo['username'];
 
-                $bookuserid=$db1->select('user_id')->from('tbl_book')->where('bookid= :bookid and delflag=0')
-                    ->bindValues(array('bookid'=>$bookid))->single();
+                $bookuserid=$db1->select('user_id')->from('tbl_book')->where('roomid= :roomid and delflag=0')
+                    ->bindValues(array('roomid'=>$roomid))->single();
                 if($bookuserid==$userid){
                     $messagetype=1;
                 }
@@ -146,7 +146,7 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
 
     $db1->insert('tbl_message')->cols(
         array(
-            'book_id'=>$bookid,
+            'room_id'=>$roomid,
             'user_id'=>$userid,
             'messagestatus'=>1,
             'messagetype'=>$messagetype,
@@ -169,7 +169,7 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
     );
     //var_dump($data);
     $connectionids=$db1->select('connectionid')->from('tbl_connection')
-        ->where(' book_id= :bookid and delflag=0')->bindValues(array('bookid'=>$bookid))->column();
+        ->where(' room_id= :roomid and delflag=0')->bindValues(array('roomid'=>$roomid))->column();
     chat_broad_cast(json_encode($data),$connectionids);
 };
 
@@ -177,7 +177,7 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
 $ws_server->onClose = function($connection)
 {
     $db1=Db::instance('db1');
-    $connectioninfo=$db1->select('book_id,user_id')->from('tbl_connection')->where('connectionid= :connectionid and delflag=0')
+    $connectioninfo=$db1->select('room_id,user_id')->from('tbl_connection')->where('connectionid= :connectionid and delflag=0')
         ->bindValues(array('connectionid'=>$connection->id))->row();
     //var_dump($connectioninfo);
     $headpic='';
@@ -186,7 +186,7 @@ $ws_server->onClose = function($connection)
     $type='SYS';
     $connectionids=array($connection->id);
     if($connectioninfo){
-        $bookid=$connectioninfo['book_id'];
+        $roomid=$connectioninfo['room_id'];
         $userid=$connectioninfo['user_id'];
         $db1->update('tbl_connection')->cols(array('updatetime'=>time(),'delflag'=>1))->where("connectionid=".$connection->id." and delflag=0")->query();
         $type='LGT';
@@ -205,7 +205,7 @@ $ws_server->onClose = function($connection)
             $name=$userinfo['nickname']!=''?$userinfo['nickname']:$userinfo['username'];
 
             $connectionids=$db1->select('connectionid')->from('tbl_connection')
-                ->where(' book_id= :bookid and delflag=0')->bindValues(array('bookid'=>$bookid))->column();
+                ->where(' room_id= :roomid and delflag=0')->bindValues(array('roomid'=>$roomid))->column();
         }
 
     }
