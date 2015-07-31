@@ -15,7 +15,6 @@ $ws_server->name = 'SimpleChatWebSocket';
 $ws_server->count = 1;
 
 
-
 // @see http://doc3.workerman.net/worker-development/on-connect.html
 $ws_server->onConnect = function($connection)
 {
@@ -82,7 +81,8 @@ $ws_server->onConnect = function($connection)
 
         $connectionids=$db1->select('connectionid')->from('tbl_connection')
             ->where(' room_id= :roomid and delflag=0')->bindValues(array('roomid'=>$roomid))->column();
-        chat_broad_cast(json_encode($data),$connectionids);
+        chat_broad_cast($connection,json_encode($data),$connectionids);
+
     };
 };
 
@@ -170,7 +170,7 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
     //var_dump($data);
     $connectionids=$db1->select('connectionid')->from('tbl_connection')
         ->where(' room_id= :roomid and delflag=0')->bindValues(array('roomid'=>$roomid))->column();
-    chat_broad_cast(json_encode($data),$connectionids);
+    chat_broad_cast($connection,json_encode($data),$connectionids);
 };
 
 // @see http://doc3.workerman.net/worker-development/connection-on-close.html
@@ -224,7 +224,7 @@ $ws_server->onClose = function($connection)
                 'name' => $name
         );
 
-    chat_broad_cast(json_encode($data),$connectionids);
+    chat_broad_cast($connection,json_encode($data),$connectionids);
 };
 
 /**
@@ -232,15 +232,16 @@ $ws_server->onClose = function($connection)
  * @param string $msg
  * @return void
  */
-function chat_broad_cast($msg,$connectionids=array())
+function chat_broad_cast($connection,$msg,$connectionids=array())
 {
-    global $ws_server;
+
     //@see http://doc3.workerman.net/worker-development/connections.html
-    foreach($ws_server->connections as $connection)
+    foreach($connection->worker->connections as $con)
     {
-        if($connectionids&&in_array($connection->id,$connectionids)){
+
+        if($connectionids&&in_array($con->id,$connectionids)){
             // @see http://doc3.workerman.net/worker-development/send.html
-            $connection->send($msg);
+            $con->send($msg);
         }
 
     }
