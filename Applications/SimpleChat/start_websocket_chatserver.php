@@ -117,9 +117,9 @@ $ws_server->onMessage = function($connection, $content)use($ws_server)
                 $headpic=$userinfo['photo'];
                 $name=$userinfo['nickname']!=''?$userinfo['nickname']:$userinfo['username'];
 
-                $bookuserid=$db1->select('user_id')->from('tbl_book')->where('roomid= :roomid and delflag=0')
+                $roomuserid=$db1->select('user_id')->from('tbl_room')->where('roomid= :roomid and delflag=0')
                     ->bindValues(array('roomid'=>$roomid))->single();
-                if($bookuserid==$userid){
+                if($roomuserid==$userid){
                     $messagetype=1;
                 }
             }
@@ -180,17 +180,20 @@ $ws_server->onClose = function($connection)
     $connectioninfo=$db1->select('room_id,user_id')->from('tbl_connection')->where('connectionid= :connectionid and delflag=0')
         ->bindValues(array('connectionid'=>$connection->id))->row();
     //var_dump($connectioninfo);
+    $userid=0;
     $headpic='';
     $name='';
     $tcontent='账号错误，断开连接';
     $type='SYS';
     $connectionids=array($connection->id);
+    $time=date('Y-m-d H:i:s');
+
     if($connectioninfo){
         $roomid=$connectioninfo['room_id'];
         $userid=$connectioninfo['user_id'];
         $db1->update('tbl_connection')->cols(array('updatetime'=>time(),'delflag'=>1))->where("connectionid=".$connection->id." and delflag=0")->query();
         $type='LGT';
-        $time=date('Y-m-d H:i:s');
+
         if(isset($_SESSION['user_'.$userid])){
             $userinfo=$_SESSION['user_'.$userid];
         }
